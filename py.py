@@ -9,9 +9,14 @@ caminhoImagem = str(path.absolute()) + '//imagens//'
 
 img = cv.imread(caminhoImagem + "Q1.1.jpeg")
 print(img)
+
 #definir tamanho de imagem e aplica
 widthImg = 510
 heightImg = 700
+
+questoes = 5
+opcoes = 5
+
 img = cv.resize(img, (widthImg, heightImg))
 
 #pré-processamento
@@ -25,12 +30,13 @@ imgCanny = cv.Canny(imgBlur, 10, 50) #threshold
 countours, hierarchy = cv.findContours(imgCanny, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
 cv.drawContours(imgCnt, countours, -1, (0, 255,0), 10)
 
-#Encontrando retangulos
+#Encontrando CONTORNOS
 rectCon = py2.rectContour(countours)
-biggestContour = py2.getCornerPoints(rectCon[0])
-gradePoints = py2.getCornerPoints(rectCon[8])
+biggestContour = py2.getCornerPoints(rectCon[0])#PONTOS DA AREA DE RESPOSTAS
+gradePoints = py2.getCornerPoints(rectCon[8])#PONTOS DA AREA DE RESULTADO
 print(len(biggestContour))
 
+#AO ENCONTRAR CONTORNOS E PONTOS DE AREAS
 if biggestContour.size !=0 and gradePoints.size != 0:
 
     # BIGGEST RECTANGLE WARPING
@@ -49,13 +55,36 @@ if biggestContour.size !=0 and gradePoints.size != 0:
     ptsG2 = np.float32([[0, 0], [325, 0], [0, 150], [325, 150]])  # PREPARE POINTS FOR WARP
     matrixG = cv.getPerspectiveTransform(ptsG1, ptsG2)# GET TRANSFORMATION MATRIX
     imgGradeDisplay = cv.warpPerspective(img, matrixG, (325, 150)) # APPLY WARP PERSPECTIVE
-    cv.imshow("Grade",imgGradeDisplay)
+    cv.imshow("Resultado",imgGradeDisplay)
 
      # APPLY THRESHOLD
-    imgWarpGray = cv.cvtColor(imgWarpColored,cv.COLOR_BGR2GRAY) # CONVERT TO GRAYSCALE
+    imgWarpGray = cv.cvtColor(imgWarpColored,cv.COLOR_BGR2GRAY) # CONVERTE PARA ESCALA DE CINZA
     imgThresh = cv.threshold(imgWarpGray, 140, 255,cv.THRESH_BINARY_INV )[1] # APPLY THRESHOLD AND INVERSE
 
-    py2.splitBoxes(imgThresh)
+    boxes = py2.splitBoxes(imgThresh) #todos os "circulos" do gabarito
+    cv.imshow("box", boxes[0])
+
+    #conta a intensidade dos pixel para cada opcoes do questionario
+    pixels = np.zeros((questoes, opcoes))
+    countCol = 0 
+    countLin = 0
+    
+    for image in boxes:
+        totalPixels = cv.countNonZero(image)
+        pixels[countLin][countCol] = totalPixels
+        countCol +=1
+        if(countCol == opcoes): countLin += 1 ;countCol=0 
+    print(pixels)
+
+    #atraves do pixel maximo define qual opcao foi marcada exibindo o índice entre 0 a 4 (5 questoes)
+    myIndex = []
+    for x in range (0, questoes) : 
+        array = pixels[x]
+        myIndexValor = np.where(array==np.amax(array))
+        myIndex.append(myIndexValor[0][0])
+
+    print(myIndex) #exibe o índice das opcoes de cada questao marcada
+    
 
 
 
