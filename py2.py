@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 
+
 ## PARA EMPILHAR TODAS AS IMAGENS EM UMA JANELA
 def empilharImagens(imgArray,scale,lables=[]):
     linhas = len(imgArray)

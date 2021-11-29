@@ -3,7 +3,40 @@ import numpy as np
 import py2 #arquivo que contem funcoes 
 import sys
 from pathlib import Path
+import tkinter as tk
 
+
+
+def char_position(letter):
+    return ord(letter) - 97
+
+def send():
+        global respostas
+        global root
+        global myEntryBox
+        opcoes = myEntryBox.get()
+        posicoes=[]
+        opcoes = opcoes.split()
+        for indx in range(len(opcoes)):
+            posicao = char_position(opcoes[indx])
+            posicoes.append(posicao)
+        respostas = posicoes
+        print('respostas: ',respostas)
+        root.destroy()
+
+## Definir respostas corretas
+respostas = []
+root = tk.Tk()
+myLabel = tk.Label(root, text='\n\nInsira as respostas do gabarito a partir do numero de questões: Ex.(b c a d c)\n\n')
+myLabel.pack()
+myEntryBox = tk.Entry(root)
+myEntryBox.pack()
+mySubmitButton = tk.Button(root, text='Salvar', command=send)
+mySubmitButton.pack()
+
+root.mainloop()
+
+##Caminho da imagem
 path = Path(sys.path[0])
 caminhoImagem = str(path.absolute()) + '//imagens//'
 
@@ -16,6 +49,9 @@ heightImg = 700
 
 questoes = 5
 opcoes = 5
+numAcertos = 0
+porcentagemAcerto = 0
+
 
 img = cv.resize(img, (widthImg, heightImg))
 
@@ -23,46 +59,34 @@ img = cv.resize(img, (widthImg, heightImg))
 imgCnt= img.copy() #copia imagem original
 imgBiggestContours = img.copy() #copia imagem original
 imgCinza = cv.cvtColor(img, cv.COLOR_BGR2GRAY) #escala de cinza
-imgBlur = cv.GaussianBlur(imgCinza, (5, 5), 1) #efeito glaussiano #imagem, tamanho do núcleo, sigma X
+imgBlur = cv.GaussianBlur(imgCinza, (5, 5), 5) #efeito glaussiano #imagem, tamanho do núcleo, sigma X
 imgCanny = cv.Canny(imgBlur, 10, 50) #threshold 
 
 #encontrando os contornos na imagem
 countours, hierarchy = cv.findContours(imgCanny, cv.RETR_CCOMP, cv.CHAIN_APPROX_NONE)
 cv.drawContours(imgCnt, countours, -1, (0, 255,0), 10)
 
-#Encontrando CONTORNOS
+#Encontrando os maiores CONTORNOS
 rectCon = py2.rectContour(countours)
 biggestContour = py2.getCornerPoints(rectCon[0])#PONTOS DA AREA DE RESPOSTAS
-gradePoints = py2.getCornerPoints(rectCon[8])#PONTOS DA AREA DE RESULTADO
 print(len(biggestContour))
 
 #AO ENCONTRAR CONTORNOS E PONTOS DE AREAS
-if biggestContour.size !=0 and gradePoints.size != 0:
+if biggestContour.size !=0:
 
     # BIGGEST RECTANGLE WARPING
     biggestContour = py2.reorder(biggestContour)
     cv.drawContours(imgBiggestContours,biggestContour,-1,(0,255,0),20)# DRAW THE BIGGEST CONTOUR
-    gradePoints = py2.reorder(gradePoints)
     pts1 = np.float32(biggestContour) # PREPARE POINTS FOR WARP
     pts2 = np.float32([[0, 0],[widthImg, 0], [0, heightImg],[widthImg, heightImg]]) # PREPARE POINTS FOR WARP
     matrix = cv.getPerspectiveTransform(pts1, pts2) # GET TRANSFORMATION MATRIX
     imgWarpColored = cv.warpPerspective(img, matrix, (widthImg, heightImg)) # APPLY WARP PERSPECTIVE
-
-    # SECOND BIGGEST RECTANGLE WARPING
-    cv.drawContours(imgBiggestContours,gradePoints,-1,(255,0,0),20) # DRAW THE BIGGEST CONTOUR
-    gradePoints = py2.reorder(gradePoints) # REORDER FOR WARPING
-    ptsG1 = np.float32(gradePoints)  # PREPARE POINTS FOR WARP
-    ptsG2 = np.float32([[0, 0], [325, 0], [0, 150], [325, 150]])  # PREPARE POINTS FOR WARP
-    matrixG = cv.getPerspectiveTransform(ptsG1, ptsG2)# GET TRANSFORMATION MATRIX
-    imgGradeDisplay = cv.warpPerspective(img, matrixG, (325, 150)) # APPLY WARP PERSPECTIVE
-    cv.imshow("Resultado",imgGradeDisplay)
 
      # APPLY THRESHOLD
     imgWarpGray = cv.cvtColor(imgWarpColored,cv.COLOR_BGR2GRAY) # CONVERTE PARA ESCALA DE CINZA
     imgThresh = cv.threshold(imgWarpGray, 140, 255,cv.THRESH_BINARY_INV )[1] # APPLY THRESHOLD AND INVERSE
 
     boxes = py2.splitBoxes(imgThresh) #todos os "circulos" do gabarito
-    cv.imshow("box", boxes[0])
 
     #conta a intensidade dos pixel para cada opcoes do questionario
     pixels = np.zeros((questoes, opcoes))
@@ -83,19 +107,30 @@ if biggestContour.size !=0 and gradePoints.size != 0:
         myIndexValor = np.where(array==np.amax(array))
         myIndex.append(myIndexValor[0][0])
 
+    
     print(myIndex) #exibe o índice das opcoes de cada questao marcada
     
+    ##verifica porcentagem de acerto
+    for index in range(len(myIndex)):
+        if respostas[index] == myIndex[index]:
+            numAcertos+=1
+        
+    if numAcertos > 0:
+        porcentagemAcerto = (numAcertos * 100) / questoes  
 
+## adiciona texto a imagem
+imagemtexto = img.copy()
+txtResultado =  "Resultado=" + str(porcentagemAcerto) + '%'
+cv.putText(imagemtexto,txtResultado, (10, 500), cv.QT_FONT_BLACK, 2, (0, 255, 255), 2)
 
 
 imgBlank = np.zeros_like(img)
 #ADICIONANDO IMAGENS EM UM ARRAY
-imgArray = ([img, imgCinza, imgBlur, imgCanny],  [imgCnt, imgBiggestContours, imgWarpColored, imgThresh])
+imgArray = ([img, imgCinza, imgBlur, imgCanny],  [imgCnt, imgBiggestContours, imgWarpColored, imgThresh], [imagemtexto,imgBlank,imgBlank,imgBlank])
 #CHAMANDO A FUNCAO PARA EMPILHAR AS IMAGENS
 imgStacked = py2.empilharImagens(imgArray, 0.5) 
 
 #mostra janela com a imagem original
 cv.imshow('Imagens', imgStacked)
-
 
 cv.waitKey(0)
