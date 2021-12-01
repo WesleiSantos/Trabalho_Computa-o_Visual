@@ -4,6 +4,8 @@ import py2 #arquivo que contem funcoes
 import sys
 from pathlib import Path
 import tkinter as tk
+from tkinter import filedialog
+from tkinter import messagebox
 
 
 
@@ -40,7 +42,11 @@ root.mainloop()
 path = Path(sys.path[0])
 caminhoImagem = str(path.absolute()) + '//imagens//'
 
-img = cv.imread(caminhoImagem + "Q1.1.jpeg")
+
+
+fileImage = filedialog.askopenfilename(initialdir=caminhoImagem)
+
+img = cv.imread(fileImage)
 print(img)
 
 #definir tamanho de imagem e aplica
@@ -114,9 +120,13 @@ if biggestContour.size !=0:
     for index in range(len(myIndex)):
         if respostas[index] == myIndex[index]:
             numAcertos+=1
-        
+
+    porcentagemAcento=0
+
     if numAcertos > 0:
         porcentagemAcerto = (numAcertos * 100) / questoes  
+
+   
 
 ## adiciona texto a imagem
 imagemtexto = img.copy()
@@ -132,5 +142,8 @@ imgStacked = py2.empilharImagens(imgArray, 0.5)
 
 #mostra janela com a imagem original
 cv.imshow('Imagens', imgStacked)
+
+#exibe o resultado
+messagebox.showinfo(title="NOTA", message=str(porcentagemAcerto)+"%")
 
 cv.waitKey(0)
