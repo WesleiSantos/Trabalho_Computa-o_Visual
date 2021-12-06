@@ -113,6 +113,7 @@ while(ans):
             pixels[countLin][countCol] = totalPixels
             countCol +=1
             if(countCol == options): countLin += 1 ;countCol=0 
+        print("Pixels")
         print(pixels)
 
         #atraves do pixel maximo define qual opcao foi marcada exibindo o índice entre 0 a 4 (5 questoes)
@@ -167,7 +168,7 @@ imgBlank = np.zeros_like(img)
 #ADICIONANDO IMAGENS EM UM ARRAY
 imgArray = ([img, imgGray, imgBlur, imgCanny],  [imgCnt, imgBiggestContours, imgWarpColored, imgThresh], [imagemtexto,imgBlank,imgBlank,imgBlank])
 #CHAMANDO A FUNCAO PARA EMPILHAR AS IMAGENS
-imgStacked = py2.empilharImagens(imgArray, 0.5) 
+imgStacked = py2.imageStack(imgArray, 0.5) 
 #mostra janela com a imagem original
 cv.imshow('Imagens', imgStacked)
 
