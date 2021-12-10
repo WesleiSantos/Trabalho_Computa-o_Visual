@@ -43,10 +43,10 @@ def rectContour(contours):
     rectCon = []
     max_area = 0
     for i in contours:
-        area = cv2.contourArea(i)
+        area = cv2.contourArea(i) #determina área do contorno
         if area > 50:
-            peri = cv2.arcLength(i, True)
-            approx = cv2.approxPolyDP(i, 0.02 * peri, True)
+            peri = cv2.arcLength(i, True) #area do contorno (true=é um contorno fechado)
+            approx = cv2.approxPolyDP(i, 0.02 * peri, True) #para aproximar a forma
             if len(approx) == 4:
                 rectCon.append(i)
     rectCon = sorted(rectCon, key=cv2.contourArea,reverse=True)
@@ -67,7 +67,7 @@ def reorder(myPoints):
 #ENCONTRAR/DETERMINAR EXTREMIDAS (PONTOS) DE ESPECIFICAS AREAS (CONTORNOS)
 def getCornerPoints(cont):
     peri = cv2.arcLength(cont, True) # COMPRIMENTO DO CONTORNO
-    approx = cv2.approxPolyDP(cont, 0.02 * peri, True) # APPROXIMATE THE POLY TO GET CORNER POINTS
+    approx = cv2.approxPolyDP(cont, 0.02 * peri, True) # APROXIMAÇÃO - OBTER PONTOS DE CANTO
     return approx
 
 def splitBoxes(img):

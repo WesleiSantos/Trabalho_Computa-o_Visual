@@ -74,6 +74,7 @@ while(ans):
     #pré-processamento
     imgCnt= img.copy() #copia imagem original
     imgBiggestContours = img.copy() #copia imagem original
+    
     imgGray = cv.cvtColor(img, cv.COLOR_BGR2GRAY) #escala de cinza
     imgBlur = cv.GaussianBlur(imgGray, (5, 5), 5) #efeito glaussiano #imagem, tamanho do núcleo, sigma X
     imgCanny = cv.Canny(imgBlur, 10, 50) #threshold 
@@ -136,22 +137,21 @@ while(ans):
         if numHits > 0:
             percentHits = (numHits * 100) / questions  
 
-    ''' #MOSTRAR QUAIS QUESTOES FORAM ACERTADAS.
-    strQ=" "
+    #MOSTRAR QUAIS QUESTOES FORAM ACERTADAS.
+    strQ=""
     questoesAcertadas = []
-    for i in range (0, 4) : 
-        if myIndex[i]==respostas[i]:
+    contador=0
+    for i in range (0, 5): 
+         if myIndex[i]==responses[i]:
             questoesAcertadas.append(myIndex[i])
-            num=questoesAcertadas[i]+1
-            strQ+=str(num)+" "
-            print(strQ)
-        
-    '''
-
+            num=questoesAcertadas[contador]+1
+            contador+=1
+            strQ+=str(num)+" " 
+    
     #exibe o resultado
     root = Tk()
     root.withdraw()
-    messagebox.showinfo(title="NOTA", message=str(percentHits)+"%")
+    messagebox.showinfo(title="NOTA", message=str(percentHits)+"%\nQuestões corretas: "+strQ)
     ans = messagebox.askyesnocancel(title="Outra correção", message="Gostaria de fazer outra correção?")
     root.destroy()
 
